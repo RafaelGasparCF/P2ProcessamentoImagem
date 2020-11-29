@@ -1,0 +1,47 @@
+import imageio
+import matplotlib.pyplot as pp
+import matplotlib.patches as patches
+from skimage import color, img_as_float, exposure, filters, measure
+
+
+# imagem
+
+fiesta = imageio.imread('fiesta.jpg')
+
+fiesta_gray = color.rgb2gray(img_as_float(fiesta))
+
+# mostrar dados da imagem
+
+print(f'\nRgb shape {fiesta.shape}, size {len(fiesta)} and type {fiesta.dtype}\n')
+
+print(
+    f'Gray shape {fiesta_gray.shape}, size {len(fiesta_gray)} and type {fiesta_gray.dtype}',
+    end='\n' * 2)
+
+fiesta_hist = exposure.equalize_hist(fiesta_gray)
+
+otsu_threshold = filters.threshold_otsu(fiesta_hist)
+
+print(f'Otsu threshold {otsu_threshold}', end='\n\n')
+
+fiesta_segmented = fiesta_hist > otsu_threshold
+fiesta_label = measure.label(fiesta_segmented)
+fig, ax = pp.subplots(figsize=(10, 6))
+ax.imshow(fiesta, cmap='gray')
+ax.set_title('fiesta')
+ax.axis('off')
+
+for region in measure.regionprops(fiesta_label):
+
+    if region.area > 50:
+        minr, minc, maxr, maxc = region.bbox
+
+        rect = patches.Rectangle((minc, minr),
+                                 maxc - minc,
+                                 maxr - minr,
+                                 fill=False,
+                                 edgecolor='blue')
+
+        ax.add_patch(rect)
+
+pp.show()
